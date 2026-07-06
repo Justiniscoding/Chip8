@@ -1,0 +1,66 @@
+#include "chip8.hpp"
+
+#include <cstddef>
+#include <cstdint>
+#include <fstream>
+#include <iostream>
+#include <iterator>
+#include <string>
+
+Chip8Emulator::Chip8Emulator(std::string filePath) {
+	this->loadFontIntoMemory();
+	this->loadFileIntoMemory(filePath);
+
+	delayTimer = 0;
+	soundTimer = 0;
+
+	indexRegister = 0;
+
+	programCounter = 0x200;
+}
+
+void Chip8Emulator::loadFileIntoMemory(std::string filePath) {
+	std::ifstream fin(filePath, std::ios::binary);
+
+	std::cout << "ROM successfully opened\n";
+
+	std::vector<char> bytes((std::istreambuf_iterator<char>(fin)),
+							(std::istreambuf_iterator<char>()));
+
+	int index = 0x200;
+
+	for (char c : bytes) {
+		this->memory[index++] = static_cast<std::byte>(c);
+	}
+
+	std::cout << "Successfully loaded " << bytes.size() << " bytes into memory";
+
+	fin.close();
+}
+
+void Chip8Emulator::loadFontIntoMemory() {
+	std::uint16_t font[] = {
+		0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+		0x20, 0x60, 0x20, 0x20, 0x70, // 1
+		0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+		0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+		0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+		0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+		0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+		0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+		0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+		0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+		0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+		0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+		0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+		0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+		0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+		0xF0, 0x80, 0xF0, 0x80, 0x80  // F
+	};
+
+	for (int i = 0; i < 80; i++) {
+		this->memory[i] = static_cast<std::byte>(font[i]);
+	}
+
+	std::cout << "Font successfully loaded into memory\n";
+}

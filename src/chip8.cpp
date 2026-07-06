@@ -30,10 +30,11 @@ void Chip8Emulator::loadFileIntoMemory(std::string filePath) {
 	int index = 0x200;
 
 	for (char c : bytes) {
-		this->memory[index++] = static_cast<std::byte>(c);
+		this->memory[index++] = c;
 	}
 
-	std::cout << "Successfully loaded " << bytes.size() << " bytes into memory";
+	std::cout << "Successfully loaded " << bytes.size()
+			  << " bytes into memory\n";
 
 	fin.close();
 }
@@ -59,7 +60,7 @@ void Chip8Emulator::loadFontIntoMemory() {
 	};
 
 	for (int i = 0; i < 80; i++) {
-		this->memory[i] = static_cast<std::byte>(font[i]);
+		this->memory[i] = font[i];
 	}
 
 	std::cout << "Font successfully loaded into memory\n";

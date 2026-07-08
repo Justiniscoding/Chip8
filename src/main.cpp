@@ -43,7 +43,6 @@ bool update() {
 
 	SDL_LockTexture(gSDLTexture, NULL, (void **)&pixels, &pitch);
 
-	// std::cout << "The total is " << (CHIP8_WIDTH * CHIP8_HEIGHT * 4) << "\n";
 	memcpy(pixels, gFrameBuffer, CHIP8_WIDTH * CHIP8_HEIGHT * 4);
 
 	SDL_UnlockTexture(gSDLTexture);
@@ -57,7 +56,7 @@ bool update() {
 int main() {
 	// std::cout << "Path to the ROM: ";
 
-	std::string romPath = "./roms/corax.ch8";
+	std::string romPath = "./roms/4-flags.ch8";
 	// std::cin >> romPath;
 
 	Chip8Emulator ch8(romPath);
@@ -257,12 +256,8 @@ int main() {
 						case (0x33):
 							uint8_t num = ch8.registers[X];
 							ch8.memory[ch8.indexRegister] = num / 100;
-							ch8.memory[ch8.indexRegister + 1] =
-								(num - ch8.memory[ch8.indexRegister] * 100) /
-								10;
-							ch8.memory[ch8.indexRegister + 2] =
-								(num - ch8.memory[ch8.indexRegister] * 100 -
-								 ch8.memory[ch8.indexRegister + 1] * 10);
+							ch8.memory[ch8.indexRegister + 1] = num % 100 / 10;
+							ch8.memory[ch8.indexRegister + 2] = num % 10;
 							break;
 					}
 					break;

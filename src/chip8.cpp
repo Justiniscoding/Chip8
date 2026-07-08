@@ -1,11 +1,12 @@
-#include "chip8.hpp"
-
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <iterator>
 #include <string>
+
+#include "chip8.hpp"
+#include "constants.hpp"
 
 Chip8Emulator::Chip8Emulator(std::string filePath) {
 	registers.fill(0);

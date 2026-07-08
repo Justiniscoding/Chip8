@@ -2,3 +2,4 @@
 .DS_Store
 Chip8
 compile_commands.json
+Chip8.dSYM

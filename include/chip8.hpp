@@ -10,7 +10,7 @@ class Chip8Emulator {
   public:
 	Chip8Emulator(std::string filePath);
 
-	int programCounter;
+	uint16_t programCounter;
 	uint16_t indexRegister;
 
 	int delayTimer, soundTimer;

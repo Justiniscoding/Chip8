@@ -8,6 +8,9 @@
 #include <string>
 
 Chip8Emulator::Chip8Emulator(std::string filePath) {
+	registers.fill(0);
+	memory.fill(0);
+
 	this->loadFontIntoMemory();
 	this->loadFileIntoMemory(filePath);
 

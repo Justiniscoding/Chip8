@@ -101,18 +101,18 @@ void Chip8Emulator::executeNextInstruction(int *gFrameBuffer) {
 				stack.pop();
 
 				std::cout << "Setting the program counter to 0x"
-						  << newProgramCounter << "\n";
+						  << +newProgramCounter << "\n";
 				programCounter = newProgramCounter;
 			}
 			break;
 		case (0x1):
-			std::cout << "Jumping to address 0x" << NNN << "\n";
+			std::cout << "Jumping to address 0x" << +NNN << "\n";
 			programCounter = NNN;
 			break;
 		case (0x2):
 			stack.push(programCounter);
-			std::cout << "Pushed 0x" << programCounter
-					  << " to the stack and jumped to 0x" << NNN << "\n";
+			std::cout << "Pushed 0x" << +programCounter
+					  << " to the stack and jumped to 0x" << +NNN << "\n";
 			programCounter = NNN;
 			break;
 		case (0x3):
@@ -144,14 +144,15 @@ void Chip8Emulator::executeNextInstruction(int *gFrameBuffer) {
 			}
 			break;
 		case (0x6):
-			std::cout << "Setting register V" << X << " to 0x" << NN << "\n";
+			std::cout << "Setting register V" << +X << " to 0x" << +NN << "\n";
 			registers[X] = NN;
 			break;
 		case (0x7):
-			std::cout << "Adding 0x" << NN << " to V" << X << "\n";
+			std::cout << "Adding 0x" << +NN << " to V" << +X << "\n";
 			registers[X] += NN;
 			break;
-		case (0x8):
+		case (0x8): {
+			uint8_t flag;
 			switch (N) {
 				case (0):
 					registers[X] = registers[Y];
@@ -172,25 +173,33 @@ void Chip8Emulator::executeNextInstruction(int *gFrameBuffer) {
 					registers[0xF] = registers[X] < registers[Y] ? 1 : 0;
 					break;
 				case (0x5):
-					registers[0xF] = registers[X] >= registers[Y] ? 0 : 1;
+					flag = registers[X] < registers[Y] ? 0 : 1;
 					registers[X] = registers[X] - registers[Y];
+
+					registers[0xF] = flag;
 					break;
 				case (0x7):
-					registers[0xF] = registers[Y] >= registers[X] ? 0 : 1;
+					flag = registers[Y] < registers[X] ? 0 : 1;
 					registers[X] = registers[Y] - registers[X];
+
+					registers[0xF] = flag;
 					break;
 				case (0x6):
+					flag = registers[Y] & 1;
 					registers[X] = registers[Y] >> 1;
-					registers[0xF] = registers[X] & 1;
+
+					registers[0xF] = flag;
 					break;
 				case (0xE):
+					flag = registers[Y] >> 7 & 1;
 					registers[X] = registers[Y] << 1;
-					registers[0xF] =
-						registers[currentInstruction >> 4] >> 7 & 1;
+
+					registers[0xF] = flag;
 					break;
 			}
+		}
 		case (0xA):
-			std::cout << "Setting the index register to 0x" << NNN << "\n";
+			std::cout << "Setting the index register to 0x" << +NNN << "\n";
 			indexRegister = NNN;
 			break;
 		case (0xB):
@@ -235,8 +244,8 @@ void Chip8Emulator::executeNextInstruction(int *gFrameBuffer) {
 			}
 			break;
 		case (0xD):
-			std::cout << "The x register is " << X << " and the y register is "
-					  << Y << "\n";
+			std::cout << "The x register is " << +X << " and the y register is "
+					  << +Y << "\n";
 			registers[0xF] = 0;
 
 			for (int row = 0; row < N; row++) {

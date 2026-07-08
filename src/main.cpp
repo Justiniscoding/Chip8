@@ -19,7 +19,7 @@ const int WINDOW_HEIGHT = CHIP8_HEIGHT * SCALING_FACTOR;
 const int BG_COLOR = 0x000000ff;
 const int FG_COLOR = 0x1e90ffff;
 
-const int iterationsPerFrame = 11;
+const int iterationsPerFrame = 1;
 
 int *gFrameBuffer;
 SDL_Window *gSDLWindow;
@@ -49,7 +49,7 @@ bool update() {
 
 	SDL_RenderTexture(gSDLRenderer, gSDLTexture, NULL, NULL);
 	SDL_RenderPresent(gSDLRenderer);
-	SDL_Delay(17);
+	SDL_Delay(170);
 	return true;
 }
 
@@ -87,11 +87,6 @@ int main() {
 
 		for (int _ = 0; _ < iterationsPerFrame; _++) {
 			ch8.executeNextInstruction(gFrameBuffer);
-		}
-		std::cout << "Register values:\n";
-		for (int i = 0; i < 16; i++) {
-			std::cout << "Register V" << i << " has a value of 0x"
-					  << +ch8.registers[i] << "\n";
 		}
 		if (!update()) {
 			break;

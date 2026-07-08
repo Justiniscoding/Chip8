@@ -1,5 +1,6 @@
 #include "chip8.hpp"
 
+#include <_strings.h>
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
@@ -197,6 +198,7 @@ void Chip8Emulator::executeNextInstruction(int *gFrameBuffer) {
 					registers[0xF] = flag;
 					break;
 			}
+			break;
 		}
 		case (0xA):
 			std::cout << "Setting the index register to 0x" << +NNN << "\n";
@@ -248,8 +250,12 @@ void Chip8Emulator::executeNextInstruction(int *gFrameBuffer) {
 					  << +Y << "\n";
 			registers[0xF] = 0;
 
-			for (int row = 0; row < N; row++) {
-				uint8_t pixelData = memory[indexRegister++];
+			std::cout << "Drawing image at (0x" << +(registers[X] & 63)
+					  << ", 0x" << +(registers[Y] & 31) << ") with height "
+					  << +N << "\n";
+
+			for (uint8_t row = 0; row < N; row++) {
+				uint8_t pixelData = memory[indexRegister + row];
 
 				for (int xOffset = 0; xOffset < 8; xOffset++) {
 					if ((pixelData >> (7 - xOffset) & 1) > 0) {

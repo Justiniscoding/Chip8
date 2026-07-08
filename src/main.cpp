@@ -1,7 +1,6 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
-#include <cstdint>
 #include <cstring>
 #include <iostream>
 #include <string>
@@ -19,7 +18,7 @@ const int WINDOW_HEIGHT = CHIP8_HEIGHT * SCALING_FACTOR;
 const int BG_COLOR = 0x000000ff;
 const int FG_COLOR = 0x1e90ffff;
 
-const int iterationsPerFrame = 1;
+const int iterationsPerFrame = 11;
 
 int *gFrameBuffer;
 SDL_Window *gSDLWindow;
@@ -49,7 +48,7 @@ bool update() {
 
 	SDL_RenderTexture(gSDLRenderer, gSDLTexture, NULL, NULL);
 	SDL_RenderPresent(gSDLRenderer);
-	SDL_Delay(170);
+	SDL_Delay(17);
 	return true;
 }
 

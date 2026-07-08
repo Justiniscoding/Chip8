@@ -1,6 +1,3 @@
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_main.h>
-
 #include <cstring>
 #include <string>
 
@@ -14,7 +11,19 @@ int main() {
 	Chip8Emulator ch8(romPath);
 	SDLRenderer renderer;
 
+	std::array<bool, 16> pressedKeys;
+
+	pressedKeys.fill(false);
+
 	while (true) {
+		bool shouldQuit = false;
+
+		renderer.handleKeys(pressedKeys, shouldQuit);
+
+		if (shouldQuit) {
+			break;
+		}
+
 		if (ch8.delayTimer > 0) {
 			ch8.delayTimer--;
 		}
@@ -27,10 +36,6 @@ int main() {
 		}
 
 		renderer.updateDisplay();
-
-		if (renderer.shouldQuit()) {
-			break;
-		}
 	}
 
 	renderer.quit();

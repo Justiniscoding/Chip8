@@ -15,8 +15,8 @@ class Chip8Emulator {
 
 	int delayTimer, soundTimer;
 
-	std::array<std::uint8_t, 4096> memory;
-	std::array<std::uint8_t, 16> registers;
+	std::array<uint8_t, 4096> memory;
+	std::array<uint8_t, 16> registers;
 	std::stack<uint16_t> stack;
 
 	void executeNextInstruction(int *frameBuffer);

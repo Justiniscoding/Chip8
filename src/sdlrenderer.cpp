@@ -29,22 +29,35 @@ void SDLRenderer::updateDisplay() {
 
 	SDL_RenderTexture(renderer, texture, NULL, NULL);
 	SDL_RenderPresent(renderer);
+	SDL_Delay(17);
 }
 
-bool SDLRenderer::shouldQuit() {
+void SDLRenderer::handleKeys(std::array<bool, 16> &pressedKeys,
+							 bool &shouldQuit) {
 	SDL_Event e;
 
 	if (SDL_PollEvent(&e)) {
 		if (e.type == SDL_EVENT_QUIT) {
-			return true;
+			shouldQuit = true;
+			return;
 		}
 		if (e.type == SDL_EVENT_KEY_UP && e.key.key == SDLK_ESCAPE) {
-			return true;
+			shouldQuit = true;
+			return;
+		}
+
+		for (int i = 0; i < 16; i++) {
+			if (e.key.scancode == scancodes[i]) {
+				if (e.type == SDL_EVENT_KEY_DOWN) {
+					pressedKeys[i] = true;
+				} else {
+					pressedKeys[i] = false;
+				}
+			}
 		}
 	}
 
-	SDL_Delay(17);
-	return false;
+	shouldQuit = false;
 }
 
 void SDLRenderer::quit() {

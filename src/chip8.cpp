@@ -1,15 +1,11 @@
 #include "chip8.hpp"
 
-#include <_strings.h>
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <iterator>
 #include <string>
-
-const int BG_COLOR = 0x000000ff;
-const int FG_COLOR = 0x1e90ffff;
 
 Chip8Emulator::Chip8Emulator(std::string filePath) {
 	registers.fill(0);
@@ -73,7 +69,7 @@ void Chip8Emulator::loadFontIntoMemory() {
 	std::cout << "Font successfully loaded into memory\n";
 }
 
-void Chip8Emulator::executeNextInstruction(int *gFrameBuffer) {
+void Chip8Emulator::executeNextInstruction(int *frameBuffer) {
 	std::cout << "The program counter is at 0x" << std::hex << programCounter
 			  << "\n";
 
@@ -94,7 +90,7 @@ void Chip8Emulator::executeNextInstruction(int *gFrameBuffer) {
 		case (0x0):
 			if (NNN == 0xE0) {
 				for (int i = 0; i < 64 * 32; i++) {
-					gFrameBuffer[i] = BG_COLOR;
+					frameBuffer[i] = BG_COLOR;
 				}
 				std::cout << "Clearing the screen\n";
 			} else if (NNN == 0xEE) {
@@ -263,10 +259,10 @@ void Chip8Emulator::executeNextInstruction(int *gFrameBuffer) {
 						int yPosition = (registers[Y] & 31) + row;
 						int bufferIndex = yPosition * 64 + xPosition;
 
-						if (gFrameBuffer[bufferIndex] == BG_COLOR) {
-							gFrameBuffer[bufferIndex] = FG_COLOR;
+						if (frameBuffer[bufferIndex] == BG_COLOR) {
+							frameBuffer[bufferIndex] = FG_COLOR;
 						} else {
-							gFrameBuffer[bufferIndex] = BG_COLOR;
+							frameBuffer[bufferIndex] = BG_COLOR;
 							registers[0xF] = 1;
 						}
 					}

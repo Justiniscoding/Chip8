@@ -19,7 +19,7 @@ class Chip8Emulator {
 	std::array<std::uint8_t, 16> registers;
 	std::stack<uint16_t> stack;
 
-	void executeNextInstruction(int *gFrameBuffer);
+	void executeNextInstruction(int *frameBuffer);
 
   private:
 	void loadFileIntoMemory(std::string filePath);

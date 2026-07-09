@@ -4,6 +4,8 @@
 #include <iostream>
 #include <iterator>
 #include <string>
+#include <sys/types.h>
+#include <vector>
 
 #include "chip8.hpp"
 #include "constants.hpp"
@@ -170,7 +172,6 @@ void Chip8Emulator::executeNextInstruction(int *frameBuffer,
 				case (0x4):
 					registers[X] =
 						static_cast<uint8_t>(registers[X] + registers[Y]);
-					// TODO: this might not work so make sure to test :D
 					registers[0xF] = registers[X] < registers[Y] ? 1 : 0;
 					break;
 				case (0x5):
@@ -254,23 +255,44 @@ void Chip8Emulator::executeNextInstruction(int *frameBuffer,
 					break;
 			}
 			break;
+		case (0xE):
+			if (NN == 0x9E) {
+				if (pressedKeys[registers[X] & 0xF]) {
+					programCounter += 2;
+				}
+			} else if (NN == 0xA1) {
+				if (pressedKeys[registers[X] & 0xF] == false) {
+					programCounter += 2;
+				}
+			}
+			break;
 		case (0xD):
 			std::cout << "The x register is " << +X << " and the y register is "
 					  << +Y << "\n";
-			registers[0xF] = 0;
 
-			std::cout << "Drawing image at (0x" << +(registers[X] & 63)
-					  << ", 0x" << +(registers[Y] & 31) << ") with height "
-					  << +N << "\n";
+			uint8_t startX = registers[X] & 63;
+			uint8_t startY = registers[Y] & 31;
+
+			std::cout << "Drawing image at (0x" << startX << ", 0x" << startY
+					  << ") with height " << +N << "\n";
+
+			registers[0xF] = 0;
 
 			for (uint8_t row = 0; row < N; row++) {
 				uint8_t pixelData = memory[indexRegister + row];
+				if (startY + row >= 32) {
+					break;
+				}
 
-				for (int xOffset = 0; xOffset < 8; xOffset++) {
+				for (uint8_t xOffset = 0; xOffset < 8; xOffset++) {
 					if ((pixelData >> (7 - xOffset) & 1) > 0) {
-						int xPosition = (registers[X] & 63) + xOffset;
-						int yPosition = (registers[Y] & 31) + row;
-						int bufferIndex = yPosition * 64 + xPosition;
+						uint8_t xPosition = startX + xOffset;
+						uint8_t yPosition = startY + row;
+						uint16_t bufferIndex = yPosition * 64 + xPosition;
+
+						if (xPosition >= 64) {
+							break;
+						}
 
 						if (frameBuffer[bufferIndex] == BG_COLOR) {
 							frameBuffer[bufferIndex] = FG_COLOR;
@@ -279,17 +301,6 @@ void Chip8Emulator::executeNextInstruction(int *frameBuffer,
 							registers[0xF] = 1;
 						}
 					}
-				}
-			}
-			break;
-		case (0xE):
-			if (NN == 0x9E) {
-				if (pressedKeys[registers[X]]) {
-					programCounter += 2;
-				}
-			} else if (NN == 0xA1) {
-				if (pressedKeys[registers[X]] == false) {
-					programCounter += 2;
 				}
 			}
 			break;

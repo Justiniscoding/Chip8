@@ -50,7 +50,7 @@ void SDLRenderer::handleKeys(std::array<bool, 16> &pressedKeys,
 			if (e.key.scancode == scancodes[i]) {
 				if (e.type == SDL_EVENT_KEY_DOWN) {
 					pressedKeys[i] = true;
-				} else {
+				} else if (e.type == SDL_EVENT_KEY_UP) {
 					pressedKeys[i] = false;
 				}
 			}

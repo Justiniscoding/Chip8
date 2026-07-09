@@ -6,7 +6,7 @@
 #include "sdlrenderer.hpp"
 
 int main() {
-	std::string romPath = "./roms/quirks.ch8";
+	std::string romPath = "./roms/keypad.ch8";
 
 	Chip8Emulator ch8(romPath);
 	SDLRenderer renderer;
@@ -32,7 +32,7 @@ int main() {
 		}
 
 		for (int _ = 0; _ < ITERATIONS_PER_FRAME; _++) {
-			ch8.executeNextInstruction(renderer.frameBuffer);
+			ch8.executeNextInstruction(renderer.frameBuffer, pressedKeys);
 		}
 
 		renderer.updateDisplay();

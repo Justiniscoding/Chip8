@@ -12,6 +12,8 @@ Chip8Emulator::Chip8Emulator(std::string filePath) {
 	registers.fill(0);
 	memory.fill(0);
 
+	lastFrameKeys.fill(false);
+
 	this->loadFontIntoMemory();
 	this->loadFileIntoMemory(filePath);
 
@@ -70,7 +72,8 @@ void Chip8Emulator::loadFontIntoMemory() {
 	std::cout << "Font successfully loaded into memory\n";
 }
 
-void Chip8Emulator::executeNextInstruction(int *frameBuffer) {
+void Chip8Emulator::executeNextInstruction(int *frameBuffer,
+										   std::array<bool, 16> &pressedKeys) {
 	std::cout << "The program counter is at 0x" << std::hex << programCounter
 			  << "\n";
 
@@ -209,6 +212,15 @@ void Chip8Emulator::executeNextInstruction(int *frameBuffer) {
 			break;
 		case (0xF):
 			switch (NN) {
+				case (0x0A):
+					programCounter -= 2;
+					for (int i = 0; i < 16; i++) {
+						if (pressedKeys[i] == false && lastFrameKeys[i]) {
+							registers[X] = i;
+							programCounter += 2;
+						}
+					}
+					break;
 				case (0x7):
 					registers[X] = delayTimer;
 					break;
@@ -270,5 +282,18 @@ void Chip8Emulator::executeNextInstruction(int *frameBuffer) {
 				}
 			}
 			break;
+		case (0xE):
+			if (NN == 0x9E) {
+				if (pressedKeys[registers[X]]) {
+					programCounter += 2;
+				}
+			} else if (NN == 0xA1) {
+				if (pressedKeys[registers[X]] == false) {
+					programCounter += 2;
+				}
+			}
+			break;
 	}
+
+	lastFrameKeys = pressedKeys;
 }

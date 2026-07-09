@@ -12,12 +12,18 @@ class SDLRenderer {
 
 	void updateDisplay();
 	void quit();
+	void beep();
+	void stopBeep();
 	void handleKeys(std::array<bool, 16> &pressedKeys, bool &shouldQuit);
 
   private:
 	SDL_Window *window;
 	SDL_Renderer *renderer;
 	SDL_Texture *texture;
+
+	SDL_AudioStream *audioStream;
+
+	int sineSample;
 };
 
 const int scancodes[] = {

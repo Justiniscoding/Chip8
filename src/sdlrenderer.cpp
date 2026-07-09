@@ -15,6 +15,18 @@ SDLRenderer::SDLRenderer() {
 	for (int i = 0; i < CHIP8_HEIGHT * CHIP8_WIDTH; i++) {
 		frameBuffer[i] = BG_COLOR;
 	}
+
+	SDL_Init(SDL_INIT_AUDIO);
+
+	SDL_AudioSpec spec;
+	spec.channels = 1;
+	spec.format = SDL_AUDIO_F32;
+	spec.freq = 8000;
+
+	audioStream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK,
+											&spec, NULL, NULL);
+
+	sineSample = 0;
 }
 
 void SDLRenderer::updateDisplay() {
@@ -60,9 +72,31 @@ void SDLRenderer::handleKeys(std::array<bool, 16> &pressedKeys,
 	shouldQuit = false;
 }
 
+void SDLRenderer::beep() {
+	if (SDL_GetAudioStreamQueued(audioStream) < 1000) {
+		float samples[512];
+
+		for (unsigned long i = 0; i < SDL_arraysize(samples); i++) {
+			int frequency = 600;
+			float phase = sineSample * frequency / 8000.0f;
+			samples[i] = SDL_sinf(phase * 2 * SDL_PI_F);
+			sineSample++;
+		}
+
+		sineSample %= 8000;
+
+		SDL_PutAudioStreamData(audioStream, samples, sizeof(samples));
+	}
+
+	SDL_ResumeAudioStreamDevice(audioStream);
+}
+
+void SDLRenderer::stopBeep() { SDL_PauseAudioStreamDevice(audioStream); }
+
 void SDLRenderer::quit() {
 	SDL_DestroyTexture(texture);
 	SDL_DestroyWindow(window);
 	SDL_DestroyRenderer(renderer);
+	SDL_DestroyAudioStream(audioStream);
 	SDL_Quit();
 }

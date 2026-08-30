@@ -6,7 +6,7 @@
 #include "sdlrenderer.hpp"
 
 int main() {
-	std::string romPath = "./roms/pong.rom";
+	std::string romPath = "./roms/pleasework.ch8";
 
 	Chip8Emulator ch8(romPath);
 	SDLRenderer renderer;

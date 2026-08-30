@@ -12,7 +12,7 @@
 
 Chip8Emulator::Chip8Emulator(std::string filePath) {
 	registers.fill(0);
-	memory.fill(0);
+	memory.raw.fill(0);
 
 	lastFrameKeys.fill(false);
 
@@ -204,9 +204,11 @@ void Chip8Emulator::executeNextInstruction(int *frameBuffer,
 		case (0xA):
 			std::cout << "Setting the index register to 0x" << +NNN << "\n";
 			indexRegister = NNN;
+			indexRegister %= 0x1000;
 			break;
 		case (0xB):
-			programCounter = NNN + registers[0];
+			std::cout << "nnn is " << NNN << "\n";
+			programCounter = (NNN + registers[0]) % 0x1000;
 			break;
 		case (0xC):
 			registers[X] = rand() & NN;
@@ -233,25 +235,36 @@ void Chip8Emulator::executeNextInstruction(int *frameBuffer,
 					break;
 				case (0x1E):
 					indexRegister += registers[X];
+					indexRegister %= 0x1000;
 					break;
 				case (0x29):
 					indexRegister = (registers[X] & 0xF) * 5;
 					break;
 				case (0x55):
 					for (int i = 0; i <= X; i++) {
+						if (indexRegister + i >= 0x1000) {
+							continue;
+						}
 						memory[indexRegister + i] = registers[i];
 					}
 					break;
 				case (0x65):
 					for (uint8_t i = 0; i <= X; i++) {
+						if (indexRegister + i >= 0x1000) {
+							continue;
+						}
 						registers[i] = memory[indexRegister + i];
 					}
 					break;
 				case (0x33):
 					uint8_t num = registers[X];
 					memory[indexRegister] = num / 100;
-					memory[indexRegister + 1] = num % 100 / 10;
-					memory[indexRegister + 2] = num % 10;
+					if (indexRegister < 0xFFF) {
+						memory[indexRegister + 1] = num % 100 / 10;
+						if (indexRegister < 0xFFE) {
+							memory[indexRegister + 2] = num % 10;
+						}
+					}
 					break;
 			}
 			break;

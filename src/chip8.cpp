@@ -242,29 +242,19 @@ void Chip8Emulator::executeNextInstruction(int *frameBuffer,
 					break;
 				case (0x55):
 					for (int i = 0; i <= X; i++) {
-						if (indexRegister + i >= 0x1000) {
-							continue;
-						}
 						memory[indexRegister + i] = registers[i];
 					}
 					break;
 				case (0x65):
 					for (uint8_t i = 0; i <= X; i++) {
-						if (indexRegister + i >= 0x1000) {
-							continue;
-						}
 						registers[i] = memory[indexRegister + i];
 					}
 					break;
 				case (0x33):
 					uint8_t num = registers[X];
 					memory[indexRegister] = num / 100;
-					if (indexRegister < 0xFFF) {
-						memory[indexRegister + 1] = num % 100 / 10;
-						if (indexRegister < 0xFFE) {
-							memory[indexRegister + 2] = num % 10;
-						}
-					}
+					memory[indexRegister + 1] = num % 100 / 10;
+					memory[indexRegister + 2] = num % 10;
 					break;
 			}
 			break;

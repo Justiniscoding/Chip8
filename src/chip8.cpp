@@ -19,6 +19,8 @@ Chip8Emulator::Chip8Emulator(std::string filePath, int flags) {
 	this->loadFontIntoMemory();
 	this->loadFileIntoMemory(filePath);
 
+	this->flags = flags;
+
 	delayTimer = 0;
 	soundTimer = 0;
 
@@ -156,21 +158,32 @@ bool Chip8Emulator::executeNextInstruction(int *frameBuffer,
 			break;
 		case (0x8): {
 			uint8_t flag;
+			int targetRegister;
 			switch (N) {
 				case (0):
 					registers[X] = registers[Y];
 					break;
 				case (0x1):
 					registers[X] = registers[X] | registers[Y];
-					registers[0xF] = 0;
+
+					if((flags & PRESERVE_VF) == 0){
+						registers[0xF] = 0;
+					}
+
 					break;
 				case (0x2):
 					registers[X] = registers[X] & registers[Y];
-					registers[0xF] = 0;
+
+					if((flags & PRESERVE_VF) == 0){
+						registers[0xF] = 0;
+					}
 					break;
 				case (0x3):
 					registers[X] = registers[X] ^ registers[Y];
-					registers[0xF] = 0;
+
+					if((flags & PRESERVE_VF) == 0){
+						registers[0xF] = 0;
+					}
 					break;
 				case (0x4):
 					registers[X] =
@@ -190,14 +203,26 @@ bool Chip8Emulator::executeNextInstruction(int *frameBuffer,
 					registers[0xF] = flag;
 					break;
 				case (0x6):
-					flag = registers[Y] & 1;
-					registers[X] = registers[Y] >> 1;
+					targetRegister = registers[Y];
+
+					if(flags & SHIFT_VX_REGISTER){
+						targetRegister = registers[X];
+					}
+
+					flag = targetRegister & 1;
+					registers[X] = targetRegister >> 1;
 
 					registers[0xF] = flag;
 					break;
 				case (0xE):
-					flag = registers[Y] >> 7 & 1;
-					registers[X] = registers[Y] << 1;
+					targetRegister = registers[Y];
+
+					if(flags & SHIFT_VX_REGISTER){
+						targetRegister = registers[X];
+					}
+
+					flag = targetRegister >> 7 & 1;
+					registers[X] = targetRegister << 1;
 
 					registers[0xF] = flag;
 					break;
@@ -207,11 +232,18 @@ bool Chip8Emulator::executeNextInstruction(int *frameBuffer,
 		case (0xA):
 			std::cout << "Setting the index register to 0x" << +NNN << "\n";
 			indexRegister = NNN;
-			indexRegister %= 0x1000;
+			// indexRegister %= 0x1000;
 			break;
 		case (0xB):
 			std::cout << "nnn is " << NNN << "\n";
-			programCounter = (NNN + registers[0]) % 0x1000;
+			// programCounter = (NNN + registers[0]) % 0x1000;
+
+			if(flags & USE_VX_FOR_JUMP){
+				programCounter = NNN + registers[X];
+			}else{
+				programCounter = NNN + registers[0];
+			}
+
 			break;
 		case (0xC):
 			registers[X] = rand() & NN;
@@ -238,7 +270,7 @@ bool Chip8Emulator::executeNextInstruction(int *frameBuffer,
 					break;
 				case (0x1E):
 					indexRegister += registers[X];
-					indexRegister %= 0x1000;
+					// indexRegister %= 0x1000;
 					break;
 				case (0x29):
 					indexRegister = (registers[X] & 0xF) * 5;
@@ -248,14 +280,18 @@ bool Chip8Emulator::executeNextInstruction(int *frameBuffer,
 						memory[indexRegister + i] = registers[i];
 					}
 
-					indexRegister += X + 1;
+					if((flags & Flags::KEEP_INDEX_REGISTER) == 0){
+						indexRegister += X + 1;
+					}
 					break;
 				case (0x65):
 					for (uint8_t i = 0; i <= X; i++) {
 						registers[i] = memory[indexRegister + i];
 					}
 
-					indexRegister += X + 1;
+					if((flags & Flags::KEEP_INDEX_REGISTER) == 0){
+						indexRegister += X + 1;
+					}
 					break;
 				case (0x33):
 					uint8_t num = registers[X];
@@ -288,9 +324,11 @@ bool Chip8Emulator::executeNextInstruction(int *frameBuffer,
 
 			registers[0xF] = 0;
 
+			bool doClipping = (flags & Flags::USE_DRAW_WRAPPING) == 0;
+
 			for (uint8_t row = 0; row < N; row++) {
 				uint8_t pixelData = memory[indexRegister + row];
-				if (startY + row >= 32) {
+				if (startY + row >= 32 && doClipping) {
 					break;
 				}
 
@@ -300,8 +338,12 @@ bool Chip8Emulator::executeNextInstruction(int *frameBuffer,
 						uint8_t yPosition = startY + row;
 						uint16_t bufferIndex = yPosition * 64 + xPosition;
 
-						if (xPosition >= 64) {
+						if (xPosition >= 64 && doClipping) {
 							break;
+						}
+
+						if(!doClipping){
+							bufferIndex = (yPosition % 32) * 64 + (xPosition % 64); 
 						}
 
 						if (frameBuffer[bufferIndex] == BG_COLOR) {
@@ -313,7 +355,10 @@ bool Chip8Emulator::executeNextInstruction(int *frameBuffer,
 					}
 				}
 			}
-			return true;
+			if((flags & Flags::KEEP_EXECUTING_AFTER_DRAW) == 0){
+				return true;
+			}
+
 			break;
 	}
 

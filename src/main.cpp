@@ -6,9 +6,9 @@
 #include "sdlrenderer.hpp"
 
 int main() {
-	std::string romPath = "./roms/dinorun.ch8";
+	std::string romPath = "./roms/quirks.ch8";
 
-	Chip8Emulator ch8(romPath, Flags::VF_RESET | Flags::INCREMENT_INDEX);
+	Chip8Emulator ch8(romPath);
 	SDLRenderer renderer;
 
 	std::array<bool, 16> pressedKeys;

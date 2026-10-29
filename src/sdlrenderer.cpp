@@ -1,6 +1,10 @@
 #include "sdlrenderer.hpp"
 #include "constants.hpp"
 
+#include "imgui.h"
+#include "backends/imgui_impl_sdl3.h"
+#include "backends/imgui_impl_sdlrenderer3.h"
+
 SDLRenderer::SDLRenderer() {
 	frameBuffer = new int[CHIP8_WIDTH * CHIP8_HEIGHT];
 
@@ -9,6 +13,11 @@ SDLRenderer::SDLRenderer() {
 	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888,
 								SDL_TEXTUREACCESS_STREAMING, CHIP8_WIDTH,
 								CHIP8_HEIGHT);
+
+	ImGui::CreateContext();
+
+	ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
+	ImGui_ImplSDLRenderer3_Init(renderer);
 
 	SDL_SetTextureScaleMode(texture, SDL_ScaleMode::SDL_SCALEMODE_NEAREST);
 
@@ -30,6 +39,16 @@ SDLRenderer::SDLRenderer() {
 }
 
 void SDLRenderer::updateDisplay() {
+	// ImGui_ImplSDLRenderer3_NewFrame();
+	// ImGui_ImplSDL3_NewFrame();
+	//
+	// ImGui::NewFrame();
+	//
+	// ImGui::Begin("Hello, world!");
+	// ImGui::Text("This is a test of text.");
+	//
+	// ImGui::End();
+
 	char *pixels;
 	int pitch;
 
@@ -38,6 +57,9 @@ void SDLRenderer::updateDisplay() {
 	memcpy(pixels, frameBuffer, CHIP8_WIDTH * CHIP8_HEIGHT * 4);
 
 	SDL_UnlockTexture(texture);
+
+	// TODO: draw imgui stuff in sdl window
+	// ImGui::Render();
 
 	SDL_RenderTexture(renderer, texture, NULL, NULL);
 	SDL_RenderPresent(renderer);

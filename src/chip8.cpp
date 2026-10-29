@@ -10,7 +10,7 @@
 #include "chip8.hpp"
 #include "constants.hpp"
 
-Chip8Emulator::Chip8Emulator(std::string filePath) {
+Chip8Emulator::Chip8Emulator(std::string filePath, int flags) {
 	registers.fill(0);
 	memory.raw.fill(0);
 
@@ -74,7 +74,7 @@ void Chip8Emulator::loadFontIntoMemory() {
 	std::cout << "Font successfully loaded into memory\n";
 }
 
-void Chip8Emulator::executeNextInstruction(int *frameBuffer,
+bool Chip8Emulator::executeNextInstruction(int *frameBuffer,
 										   std::array<bool, 16> &pressedKeys) {
 	std::cout << "The program counter is at 0x" << std::hex << programCounter
 			  << "\n";
@@ -162,12 +162,15 @@ void Chip8Emulator::executeNextInstruction(int *frameBuffer,
 					break;
 				case (0x1):
 					registers[X] = registers[X] | registers[Y];
+					registers[0xF] = 0;
 					break;
 				case (0x2):
 					registers[X] = registers[X] & registers[Y];
+					registers[0xF] = 0;
 					break;
 				case (0x3):
 					registers[X] = registers[X] ^ registers[Y];
+					registers[0xF] = 0;
 					break;
 				case (0x4):
 					registers[X] =
@@ -244,11 +247,15 @@ void Chip8Emulator::executeNextInstruction(int *frameBuffer,
 					for (int i = 0; i <= X; i++) {
 						memory[indexRegister + i] = registers[i];
 					}
+
+					indexRegister += X + 1;
 					break;
 				case (0x65):
 					for (uint8_t i = 0; i <= X; i++) {
 						registers[i] = memory[indexRegister + i];
 					}
+
+					indexRegister += X + 1;
 					break;
 				case (0x33):
 					uint8_t num = registers[X];
@@ -306,8 +313,11 @@ void Chip8Emulator::executeNextInstruction(int *frameBuffer,
 					}
 				}
 			}
+			return true;
 			break;
 	}
 
 	lastFrameKeys = pressedKeys;
+
+	return false;
 }

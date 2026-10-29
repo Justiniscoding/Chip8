@@ -6,9 +6,9 @@
 #include "sdlrenderer.hpp"
 
 int main() {
-	std::string romPath = "./roms/pleasework.ch8";
+	std::string romPath = "./roms/dinorun.ch8";
 
-	Chip8Emulator ch8(romPath);
+	Chip8Emulator ch8(romPath, Flags::VF_RESET | Flags::INCREMENT_INDEX);
 	SDLRenderer renderer;
 
 	std::array<bool, 16> pressedKeys;
@@ -27,6 +27,7 @@ int main() {
 		if (ch8.delayTimer > 0) {
 			ch8.delayTimer--;
 		}
+
 		if (ch8.soundTimer > 0) {
 			ch8.soundTimer--;
 			renderer.beep();
@@ -35,7 +36,9 @@ int main() {
 		}
 
 		for (int _ = 0; _ < ITERATIONS_PER_FRAME; _++) {
-			ch8.executeNextInstruction(renderer.frameBuffer, pressedKeys);
+			if(ch8.executeNextInstruction(renderer.frameBuffer, pressedKeys)){
+				break;
+			}
 		}
 
 		renderer.updateDisplay();

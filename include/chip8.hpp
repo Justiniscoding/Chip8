@@ -17,11 +17,11 @@ enum Quirks{
 
 class Chip8Emulator {
   public:
-	Chip8Emulator(std::string filePath, int quirks = 0);
+	Chip8Emulator(std::string filePath, int quirks = 0, bool enableLogging = false);
 
 	bool executeNextInstruction(int *frameBuffer,
 								std::array<bool, 16> &pressedKeys);
-	int delayTimer, soundTimer, quirks;
+	int delayTimer, soundTimer;
 
   private:
 	// Janitor Raus, you are a genius.
@@ -34,6 +34,12 @@ class Chip8Emulator {
 
 	void loadFileIntoMemory(std::string filePath);
 	void loadFontIntoMemory();
+
+	void log(std::string s);
+
+	int quirks;
+
+	bool logging;
 
 	uint16_t programCounter;
 	uint16_t indexRegister;

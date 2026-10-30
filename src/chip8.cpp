@@ -10,7 +10,7 @@
 #include "chip8.hpp"
 #include "constants.hpp"
 
-Chip8Emulator::Chip8Emulator(std::string filePath, int quirks) {
+Chip8Emulator::Chip8Emulator(std::string filePath, int quirks, bool enableLogging) {
 	registers.fill(0);
 	memory.raw.fill(0);
 
@@ -20,6 +20,8 @@ Chip8Emulator::Chip8Emulator(std::string filePath, int quirks) {
 	this->loadFileIntoMemory(filePath);
 
 	this->quirks = quirks;
+
+	logging = enableLogging;
 
 	delayTimer = 0;
 	soundTimer = 0;
@@ -78,13 +80,12 @@ void Chip8Emulator::loadFontIntoMemory() {
 
 bool Chip8Emulator::executeNextInstruction(int *frameBuffer,
 										   std::array<bool, 16> &pressedKeys) {
-	std::cout << "The program counter is at 0x" << std::hex << programCounter
-			  << "\n";
+	if(logging) std::cout << "The program counter is at 0x" << std::hex << programCounter << "\n";
 
 	uint16_t currentInstruction =
 		memory[programCounter] << 8 | memory[programCounter + 1];
 
-	std::cout << "The current instruction is 0x" << +currentInstruction << "\n";
+	if(logging) std::cout << "The current instruction is 0x" << +currentInstruction << "\n";
 
 	programCounter += 2;
 
@@ -100,24 +101,22 @@ bool Chip8Emulator::executeNextInstruction(int *frameBuffer,
 				for (int i = 0; i < 64 * 32; i++) {
 					frameBuffer[i] = BG_COLOR;
 				}
-				std::cout << "Clearing the screen\n";
+				if(logging) std::cout << "Clearing the screen\n";
 			} else if (NNN == 0xEE) {
 				uint16_t newProgramCounter = stack.top();
 				stack.pop();
 
-				std::cout << "Setting the program counter to 0x"
-						  << +newProgramCounter << "\n";
+				if(logging) std::cout << "Setting the program counter to 0x" << +newProgramCounter << "\n";
 				programCounter = newProgramCounter;
 			}
 			break;
 		case (0x1):
-			std::cout << "Jumping to address 0x" << +NNN << "\n";
+			if(logging) std::cout << "Jumping to address 0x" << +NNN << "\n";
 			programCounter = NNN;
 			break;
 		case (0x2):
 			stack.push(programCounter);
-			std::cout << "Pushed 0x" << +programCounter
-					  << " to the stack and jumped to 0x" << +NNN << "\n";
+			if(logging) std::cout << "Pushed 0x" << +programCounter << " to the stack and jumped to 0x" << +NNN << "\n";
 			programCounter = NNN;
 			break;
 		case (0x3):
@@ -132,7 +131,7 @@ bool Chip8Emulator::executeNextInstruction(int *frameBuffer,
 			break;
 		case (0x5):
 			if (N != 0) {
-				std::cout << "Unknown variation of 0x5 received!\n";
+				if(logging) std::cout << "Unknown variation of 0x5 received!\n";
 				break;
 			}
 			if (registers[X] == registers[Y]) {
@@ -141,7 +140,7 @@ bool Chip8Emulator::executeNextInstruction(int *frameBuffer,
 			break;
 		case (0x9):
 			if (N != 0) {
-				std::cout << "Unknown variation of 0x9 received!\n";
+				if(logging) std::cout << "Unknown variation of 0x9 received!\n";
 				break;
 			}
 			if (registers[X] != registers[Y]) {
@@ -149,11 +148,11 @@ bool Chip8Emulator::executeNextInstruction(int *frameBuffer,
 			}
 			break;
 		case (0x6):
-			std::cout << "Setting register V" << +X << " to 0x" << +NN << "\n";
+			if(logging) std::cout << "Setting register V" << +X << " to 0x" << +NN << "\n";
 			registers[X] = NN;
 			break;
 		case (0x7):
-			std::cout << "Adding 0x" << +NN << " to V" << +X << "\n";
+			if(logging) std::cout << "Adding 0x" << +NN << " to V" << +X << "\n";
 			registers[X] += NN;
 			break;
 		case (0x8): {
@@ -230,11 +229,11 @@ bool Chip8Emulator::executeNextInstruction(int *frameBuffer,
 			break;
 		}
 		case (0xA):
-			std::cout << "Setting the index register to 0x" << +NNN << "\n";
+			if(logging) std::cout << "Setting the index register to 0x" << +NNN << "\n";
 			indexRegister = NNN;
 			break;
 		case (0xB):
-			std::cout << "nnn is " << NNN << "\n";
+			if(logging) std::cout << "nnn is " << NNN << "\n";
 			if(quirks & USE_VX_FOR_JUMP){
 				programCounter = NNN + registers[X];
 			}else{
@@ -309,14 +308,12 @@ bool Chip8Emulator::executeNextInstruction(int *frameBuffer,
 			}
 			break;
 		case (0xD):
-			std::cout << "The x register is " << +X << " and the y register is "
-					  << +Y << "\n";
+			if(logging) std::cout << "The x register is " << +X << " and the y register is " << +Y << "\n";
 
 			uint8_t startX = registers[X] & 63;
 			uint8_t startY = registers[Y] & 31;
 
-			std::cout << "Drawing image at (0x" << startX << ", 0x" << startY
-					  << ") with height " << +N << "\n";
+			if(logging) std::cout << "Drawing image at (0x" << startX << ", 0x" << startY << ") with height " << +N << "\n";
 
 			registers[0xF] = 0;
 

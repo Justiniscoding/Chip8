@@ -6,7 +6,7 @@
 #include <stack>
 #include <string>
 
-enum Flags{
+enum Quirks{
 	PRESERVE_VF = 1,
 	KEEP_INDEX_REGISTER = 2,
 	KEEP_EXECUTING_AFTER_DRAW = 4,
@@ -17,11 +17,11 @@ enum Flags{
 
 class Chip8Emulator {
   public:
-	Chip8Emulator(std::string filePath, int flags = 0);
+	Chip8Emulator(std::string filePath, int quirks = 0);
 
 	bool executeNextInstruction(int *frameBuffer,
 								std::array<bool, 16> &pressedKeys);
-	int delayTimer, soundTimer, flags;
+	int delayTimer, soundTimer, quirks;
 
   private:
 	// Janitor Raus, you are a genius.

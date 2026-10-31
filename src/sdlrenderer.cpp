@@ -1,11 +1,12 @@
 #include "sdlrenderer.hpp"
 #include "constants.hpp"
+#include "config.hpp"
 
 #include "imgui.h"
 #include "backends/imgui_impl_sdl3.h"
 #include "backends/imgui_impl_sdlrenderer3.h"
 
-SDLRenderer::SDLRenderer() {
+SDLRenderer::SDLRenderer(Config *config) {
 	frameBuffer = new int[CHIP8_WIDTH * CHIP8_HEIGHT];
 
 	window = SDL_CreateWindow("Chip8Emulator", WINDOW_WIDTH, WINDOW_HEIGHT, 0);
@@ -13,6 +14,8 @@ SDLRenderer::SDLRenderer() {
 	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888,
 								SDL_TEXTUREACCESS_STREAMING, CHIP8_WIDTH,
 								CHIP8_HEIGHT);
+
+	this->config = config;
 
 	ImGui::CreateContext();
 
@@ -22,7 +25,7 @@ SDLRenderer::SDLRenderer() {
 	SDL_SetTextureScaleMode(texture, SDL_ScaleMode::SDL_SCALEMODE_NEAREST);
 
 	for (int i = 0; i < CHIP8_HEIGHT * CHIP8_WIDTH; i++) {
-		frameBuffer[i] = BG_COLOR;
+		frameBuffer[i] = config->getColor();
 	}
 
 	SDL_Init(SDL_INIT_AUDIO);
@@ -39,15 +42,62 @@ SDLRenderer::SDLRenderer() {
 }
 
 void SDLRenderer::updateDisplay() {
-	// ImGui_ImplSDLRenderer3_NewFrame();
-	// ImGui_ImplSDL3_NewFrame();
-	//
-	// ImGui::NewFrame();
-	//
-	// ImGui::Begin("Hello, world!");
-	// ImGui::Text("This is a test of text.");
-	//
-	// ImGui::End();
+	ImGui_ImplSDLRenderer3_NewFrame();
+	ImGui_ImplSDL3_NewFrame();
+
+	ImGui::NewFrame();
+
+	ImGui::Begin("Settings");
+
+	ImGui::ColorEdit3("Foreground Color", (float*)&(config->fgColor));
+	ImGui::ColorEdit3("Background Color", (float*)&config->bgColor);
+
+	ImGui::SliderInt("Iterations Per Frame", &config->iterationsPerFrame, 1, 30);
+
+	ImGui::NewLine();
+
+	ImGui::Checkbox("Enable Logging", &config->logging);
+
+	ImGui::Text("Quirks");
+
+	bool perserveVF = config->getQuirk(PRESERVE_VF);
+	bool keepIndex = config->getQuirk(KEEP_INDEX_REGISTER);
+	bool keepExecuting = config->getQuirk(KEEP_EXECUTING_AFTER_DRAW);
+	bool useDrawWrap = config->getQuirk(USE_DRAW_WRAPPING);
+	bool shiftVX = config->getQuirk(SHIFT_VX_REGISTER);
+	bool useVX = config->getQuirk(USE_VX_FOR_JUMP);
+
+	if(ImGui::Checkbox("Preserve VF", &perserveVF)){
+		config->setQuirk(PRESERVE_VF, perserveVF);
+	}
+
+	if(ImGui::Checkbox("Keep Index Register", &keepIndex)){
+		config->setQuirk(KEEP_INDEX_REGISTER, keepIndex);
+	}
+
+	if(ImGui::Checkbox("Keep Executing After Draw", &keepExecuting)){
+		config->setQuirk(KEEP_EXECUTING_AFTER_DRAW, keepExecuting);
+	}
+
+	if(ImGui::Checkbox("Draw Wrapping", &useDrawWrap)){
+		config->setQuirk(USE_DRAW_WRAPPING, useDrawWrap);
+	}
+
+	if(ImGui::Checkbox("Shift VX Register", &shiftVX)){
+		config->setQuirk(SHIFT_VX_REGISTER, shiftVX);
+	}
+
+	if(ImGui::Checkbox("Use VX For Jump", &useVX)){
+		config->setQuirk(USE_VX_FOR_JUMP, useVX);
+	}
+
+	ImGui::NewLine();
+
+	if(ImGui::Button("Restart ROM")){
+		config->restart = true;
+	}
+
+	ImGui::End();
 
 	char *pixels;
 	int pitch;
@@ -58,10 +108,10 @@ void SDLRenderer::updateDisplay() {
 
 	SDL_UnlockTexture(texture);
 
-	// TODO: draw imgui stuff in sdl window
-	// ImGui::Render();
+	ImGui::Render();
 
 	SDL_RenderTexture(renderer, texture, NULL, NULL);
+	ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
 	SDL_RenderPresent(renderer);
 	SDL_Delay(17);
 }
@@ -71,6 +121,7 @@ void SDLRenderer::handleKeys(std::array<bool, 16> &pressedKeys,
 	SDL_Event e;
 
 	if (SDL_PollEvent(&e)) {
+		ImGui_ImplSDL3_ProcessEvent(&e);
 		if (e.type == SDL_EVENT_QUIT) {
 			shouldQuit = true;
 			return;

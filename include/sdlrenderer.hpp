@@ -1,12 +1,14 @@
 #pragma once
 
+#include "config.hpp"
+
 #include <SDL3/SDL.h>
 
 #include <array>
 
 class SDLRenderer {
   public:
-	SDLRenderer();
+	SDLRenderer(Config* config);
 
 	int *frameBuffer;
 
@@ -22,6 +24,8 @@ class SDLRenderer {
 	SDL_Texture *texture;
 
 	SDL_AudioStream *audioStream;
+
+	Config *config;
 
 	int sineSample;
 };

@@ -6,21 +6,17 @@
 #include <stack>
 #include <string>
 
-enum Quirks{
-	PRESERVE_VF = 1,
-	KEEP_INDEX_REGISTER = 2,
-	KEEP_EXECUTING_AFTER_DRAW = 4,
-	USE_DRAW_WRAPPING = 8,
-	SHIFT_VX_REGISTER = 16,
-	USE_VX_FOR_JUMP = 32
-};
+#include "config.hpp"
 
 class Chip8Emulator {
   public:
-	Chip8Emulator(std::string filePath, int quirks = 0, bool enableLogging = false);
+	Chip8Emulator(std::string filePath, Config* config);
 
 	bool executeNextInstruction(int *frameBuffer,
 								std::array<bool, 16> &pressedKeys);
+
+	void restart(std::string filePath);
+
 	int delayTimer, soundTimer;
 
   private:
@@ -37,9 +33,7 @@ class Chip8Emulator {
 
 	void log(std::string s);
 
-	int quirks;
-
-	bool logging;
+	Config *config;
 
 	uint16_t programCounter;
 	uint16_t indexRegister;

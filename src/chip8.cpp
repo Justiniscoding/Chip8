@@ -8,9 +8,8 @@
 #include <vector>
 
 #include "chip8.hpp"
-#include "constants.hpp"
 
-Chip8Emulator::Chip8Emulator(std::string filePath, int quirks, bool enableLogging) {
+Chip8Emulator::Chip8Emulator(std::string filePath, Config* config) {
 	registers.fill(0);
 	memory.raw.fill(0);
 
@@ -19,9 +18,7 @@ Chip8Emulator::Chip8Emulator(std::string filePath, int quirks, bool enableLoggin
 	this->loadFontIntoMemory();
 	this->loadFileIntoMemory(filePath);
 
-	this->quirks = quirks;
-
-	logging = enableLogging;
+	this->config = config;
 
 	delayTimer = 0;
 	soundTimer = 0;
@@ -33,6 +30,11 @@ Chip8Emulator::Chip8Emulator(std::string filePath, int quirks, bool enableLoggin
 
 void Chip8Emulator::loadFileIntoMemory(std::string filePath) {
 	std::ifstream fin(filePath, std::ios::binary);
+
+	if(!fin){
+		std::cout << "Failed to open file at the path, please try again!\n";
+		return;
+	}
 
 	std::cout << "ROM successfully opened\n";
 
@@ -80,12 +82,12 @@ void Chip8Emulator::loadFontIntoMemory() {
 
 bool Chip8Emulator::executeNextInstruction(int *frameBuffer,
 										   std::array<bool, 16> &pressedKeys) {
-	if(logging) std::cout << "The program counter is at 0x" << std::hex << programCounter << "\n";
+	if(config->logging) std::cout << "The program counter is at 0x" << std::hex << programCounter << "\n";
 
 	uint16_t currentInstruction =
 		memory[programCounter] << 8 | memory[programCounter + 1];
 
-	if(logging) std::cout << "The current instruction is 0x" << +currentInstruction << "\n";
+	if(config->logging) std::cout << "The current instruction is 0x" << +currentInstruction << "\n";
 
 	programCounter += 2;
 
@@ -99,24 +101,24 @@ bool Chip8Emulator::executeNextInstruction(int *frameBuffer,
 		case (0x0):
 			if (NNN == 0xE0) {
 				for (int i = 0; i < 64 * 32; i++) {
-					frameBuffer[i] = BG_COLOR;
+					frameBuffer[i] = config->getColor();
 				}
-				if(logging) std::cout << "Clearing the screen\n";
+				if(config->logging) std::cout << "Clearing the screen\n";
 			} else if (NNN == 0xEE) {
 				uint16_t newProgramCounter = stack.top();
 				stack.pop();
 
-				if(logging) std::cout << "Setting the program counter to 0x" << +newProgramCounter << "\n";
+				if(config->logging) std::cout << "Setting the program counter to 0x" << +newProgramCounter << "\n";
 				programCounter = newProgramCounter;
 			}
 			break;
 		case (0x1):
-			if(logging) std::cout << "Jumping to address 0x" << +NNN << "\n";
+			if(config->logging) std::cout << "Jumping to address 0x" << +NNN << "\n";
 			programCounter = NNN;
 			break;
 		case (0x2):
 			stack.push(programCounter);
-			if(logging) std::cout << "Pushed 0x" << +programCounter << " to the stack and jumped to 0x" << +NNN << "\n";
+			if(config->logging) std::cout << "Pushed 0x" << +programCounter << " to the stack and jumped to 0x" << +NNN << "\n";
 			programCounter = NNN;
 			break;
 		case (0x3):
@@ -131,7 +133,7 @@ bool Chip8Emulator::executeNextInstruction(int *frameBuffer,
 			break;
 		case (0x5):
 			if (N != 0) {
-				if(logging) std::cout << "Unknown variation of 0x5 received!\n";
+				if(config->logging) std::cout << "Unknown variation of 0x5 received!\n";
 				break;
 			}
 			if (registers[X] == registers[Y]) {
@@ -140,7 +142,7 @@ bool Chip8Emulator::executeNextInstruction(int *frameBuffer,
 			break;
 		case (0x9):
 			if (N != 0) {
-				if(logging) std::cout << "Unknown variation of 0x9 received!\n";
+				if(config->logging) std::cout << "Unknown variation of 0x9 received!\n";
 				break;
 			}
 			if (registers[X] != registers[Y]) {
@@ -148,11 +150,11 @@ bool Chip8Emulator::executeNextInstruction(int *frameBuffer,
 			}
 			break;
 		case (0x6):
-			if(logging) std::cout << "Setting register V" << +X << " to 0x" << +NN << "\n";
+			if(config->logging) std::cout << "Setting register V" << +X << " to 0x" << +NN << "\n";
 			registers[X] = NN;
 			break;
 		case (0x7):
-			if(logging) std::cout << "Adding 0x" << +NN << " to V" << +X << "\n";
+			if(config->logging) std::cout << "Adding 0x" << +NN << " to V" << +X << "\n";
 			registers[X] += NN;
 			break;
 		case (0x8): {
@@ -165,7 +167,7 @@ bool Chip8Emulator::executeNextInstruction(int *frameBuffer,
 				case (0x1):
 					registers[X] = registers[X] | registers[Y];
 
-					if((quirks & PRESERVE_VF) == 0){
+					if(!config->getQuirk(PRESERVE_VF)){
 						registers[0xF] = 0;
 					}
 
@@ -173,14 +175,14 @@ bool Chip8Emulator::executeNextInstruction(int *frameBuffer,
 				case (0x2):
 					registers[X] = registers[X] & registers[Y];
 
-					if((quirks & PRESERVE_VF) == 0){
+					if(!config->getQuirk(PRESERVE_VF)){
 						registers[0xF] = 0;
 					}
 					break;
 				case (0x3):
 					registers[X] = registers[X] ^ registers[Y];
 
-					if((quirks & PRESERVE_VF) == 0){
+					if(!config->getQuirk(PRESERVE_VF)){
 						registers[0xF] = 0;
 					}
 					break;
@@ -204,7 +206,7 @@ bool Chip8Emulator::executeNextInstruction(int *frameBuffer,
 				case (0x6):
 					targetRegister = registers[Y];
 
-					if(quirks & SHIFT_VX_REGISTER){
+					if(config->getQuirk(SHIFT_VX_REGISTER)){
 						targetRegister = registers[X];
 					}
 
@@ -216,7 +218,7 @@ bool Chip8Emulator::executeNextInstruction(int *frameBuffer,
 				case (0xE):
 					targetRegister = registers[Y];
 
-					if(quirks & SHIFT_VX_REGISTER){
+					if(config->getQuirk(SHIFT_VX_REGISTER)){
 						targetRegister = registers[X];
 					}
 
@@ -229,12 +231,12 @@ bool Chip8Emulator::executeNextInstruction(int *frameBuffer,
 			break;
 		}
 		case (0xA):
-			if(logging) std::cout << "Setting the index register to 0x" << +NNN << "\n";
+			if(config->logging) std::cout << "Setting the index register to 0x" << +NNN << "\n";
 			indexRegister = NNN;
 			break;
 		case (0xB):
-			if(logging) std::cout << "nnn is " << NNN << "\n";
-			if(quirks & USE_VX_FOR_JUMP){
+			if(config->logging) std::cout << "nnn is " << NNN << "\n";
+			if(config->getQuirk(USE_VX_FOR_JUMP)){
 				programCounter = NNN + registers[X];
 			}else{
 				programCounter = NNN + registers[0];
@@ -275,7 +277,7 @@ bool Chip8Emulator::executeNextInstruction(int *frameBuffer,
 						memory[indexRegister + i] = registers[i];
 					}
 
-					if((quirks & KEEP_INDEX_REGISTER) == 0){
+					if(!config->getQuirk(KEEP_INDEX_REGISTER)){
 						indexRegister += X + 1;
 					}
 					break;
@@ -284,7 +286,7 @@ bool Chip8Emulator::executeNextInstruction(int *frameBuffer,
 						registers[i] = memory[indexRegister + i];
 					}
 
-					if((quirks & KEEP_INDEX_REGISTER) == 0){
+					if(!config->getQuirk(KEEP_INDEX_REGISTER)){
 						indexRegister += X + 1;
 					}
 					break;
@@ -308,16 +310,16 @@ bool Chip8Emulator::executeNextInstruction(int *frameBuffer,
 			}
 			break;
 		case (0xD):
-			if(logging) std::cout << "The x register is " << +X << " and the y register is " << +Y << "\n";
+			if(config->logging) std::cout << "The x register is " << +X << " and the y register is " << +Y << "\n";
 
 			uint8_t startX = registers[X] & 63;
 			uint8_t startY = registers[Y] & 31;
 
-			if(logging) std::cout << "Drawing image at (0x" << startX << ", 0x" << startY << ") with height " << +N << "\n";
+			if(config->logging) std::cout << "Drawing image at (0x" << startX << ", 0x" << startY << ") with height " << +N << "\n";
 
 			registers[0xF] = 0;
 
-			bool doClipping = (quirks & USE_DRAW_WRAPPING) == 0;
+			bool doClipping = config->getQuirk(USE_DRAW_WRAPPING) == 0;
 
 			for (uint8_t row = 0; row < N; row++) {
 				uint8_t pixelData = memory[indexRegister + row];
@@ -336,19 +338,19 @@ bool Chip8Emulator::executeNextInstruction(int *frameBuffer,
 						}
 
 						if(!doClipping){
-							bufferIndex = (yPosition % 64) * 64 + (xPosition % 64); 
+							bufferIndex = (yPosition % 32) * 64 + (xPosition % 64); 
 						}
 
-						if (frameBuffer[bufferIndex] == BG_COLOR) {
-							frameBuffer[bufferIndex] = FG_COLOR;
+						if (frameBuffer[bufferIndex] == config->getColor()) {
+							frameBuffer[bufferIndex] = config->getColor(true);
 						} else {
-							frameBuffer[bufferIndex] = BG_COLOR;
+							frameBuffer[bufferIndex] = config->getColor();
 							registers[0xF] = 1;
 						}
 					}
 				}
 			}
-			if((quirks & KEEP_EXECUTING_AFTER_DRAW) == 0){
+			if(!config->getQuirk(KEEP_EXECUTING_AFTER_DRAW)){
 				return true;
 			}
 
@@ -358,4 +360,22 @@ bool Chip8Emulator::executeNextInstruction(int *frameBuffer,
 	lastFrameKeys = pressedKeys;
 
 	return false;
+}
+
+void Chip8Emulator::restart(std::string filePath){
+	delayTimer = 0;
+	soundTimer = 0;
+
+	indexRegister = 0;
+
+	programCounter = 0x200;
+
+	lastFrameKeys.fill(false);
+
+	registers.fill(0);
+
+	memory.raw.fill(0);
+
+	this->loadFontIntoMemory();
+	this->loadFileIntoMemory(filePath);
 }

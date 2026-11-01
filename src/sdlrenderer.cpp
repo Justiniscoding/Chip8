@@ -47,57 +47,63 @@ void SDLRenderer::updateDisplay() {
 
 	ImGui::NewFrame();
 
-	ImGui::Begin("Settings");
+	if(config->settingsShown){
+		ImGui::Begin("Settings");
 
-	ImGui::ColorEdit3("Foreground Color", (float*)&(config->fgColor));
-	ImGui::ColorEdit3("Background Color", (float*)&config->bgColor);
+		ImGui::ColorEdit3("Foreground Color", (float*)&(config->fgColor));
+		ImGui::ColorEdit3("Background Color", (float*)&config->bgColor);
 
-	ImGui::SliderInt("Iterations Per Frame", &config->iterationsPerFrame, 1, 30);
+		ImGui::SliderInt("Iterations Per Frame", &config->iterationsPerFrame, 1, 30);
 
-	ImGui::NewLine();
+		ImGui::NewLine();
 
-	ImGui::Checkbox("Enable Logging", &config->logging);
+		ImGui::Checkbox("Enable Logging", &config->logging);
 
-	ImGui::Text("Quirks");
+		ImGui::Text("Quirks");
 
-	bool perserveVF = config->getQuirk(PRESERVE_VF);
-	bool keepIndex = config->getQuirk(KEEP_INDEX_REGISTER);
-	bool keepExecuting = config->getQuirk(KEEP_EXECUTING_AFTER_DRAW);
-	bool useDrawWrap = config->getQuirk(USE_DRAW_WRAPPING);
-	bool shiftVX = config->getQuirk(SHIFT_VX_REGISTER);
-	bool useVX = config->getQuirk(USE_VX_FOR_JUMP);
+		bool perserveVF = config->getQuirk(PRESERVE_VF);
+		bool keepIndex = config->getQuirk(KEEP_INDEX_REGISTER);
+		bool keepExecuting = config->getQuirk(KEEP_EXECUTING_AFTER_DRAW);
+		bool useDrawWrap = config->getQuirk(USE_DRAW_WRAPPING);
+		bool shiftVX = config->getQuirk(SHIFT_VX_REGISTER);
+		bool useVX = config->getQuirk(USE_VX_FOR_JUMP);
 
-	if(ImGui::Checkbox("Preserve VF", &perserveVF)){
-		config->setQuirk(PRESERVE_VF, perserveVF);
+		if(ImGui::Checkbox("Preserve VF", &perserveVF)){
+			config->setQuirk(PRESERVE_VF, perserveVF);
+		}
+
+		if(ImGui::Checkbox("Keep Index Register", &keepIndex)){
+			config->setQuirk(KEEP_INDEX_REGISTER, keepIndex);
+		}
+
+		if(ImGui::Checkbox("Keep Executing After Draw", &keepExecuting)){
+			config->setQuirk(KEEP_EXECUTING_AFTER_DRAW, keepExecuting);
+		}
+
+		if(ImGui::Checkbox("Draw Wrapping", &useDrawWrap)){
+			config->setQuirk(USE_DRAW_WRAPPING, useDrawWrap);
+		}
+
+		if(ImGui::Checkbox("Shift VX Register", &shiftVX)){
+			config->setQuirk(SHIFT_VX_REGISTER, shiftVX);
+		}
+
+		if(ImGui::Checkbox("Use VX For Jump", &useVX)){
+			config->setQuirk(USE_VX_FOR_JUMP, useVX);
+		}
+
+		ImGui::NewLine();
+
+		if(ImGui::Button("Restart ROM")){
+			config->restart = true;
+		}
+
+		if(ImGui::Button("Hide Menu")){
+			config->settingsShown = false;
+		}
+
+		ImGui::End();
 	}
-
-	if(ImGui::Checkbox("Keep Index Register", &keepIndex)){
-		config->setQuirk(KEEP_INDEX_REGISTER, keepIndex);
-	}
-
-	if(ImGui::Checkbox("Keep Executing After Draw", &keepExecuting)){
-		config->setQuirk(KEEP_EXECUTING_AFTER_DRAW, keepExecuting);
-	}
-
-	if(ImGui::Checkbox("Draw Wrapping", &useDrawWrap)){
-		config->setQuirk(USE_DRAW_WRAPPING, useDrawWrap);
-	}
-
-	if(ImGui::Checkbox("Shift VX Register", &shiftVX)){
-		config->setQuirk(SHIFT_VX_REGISTER, shiftVX);
-	}
-
-	if(ImGui::Checkbox("Use VX For Jump", &useVX)){
-		config->setQuirk(USE_VX_FOR_JUMP, useVX);
-	}
-
-	ImGui::NewLine();
-
-	if(ImGui::Button("Restart ROM")){
-		config->restart = true;
-	}
-
-	ImGui::End();
 
 	char *pixels;
 	int pitch;
@@ -129,6 +135,10 @@ void SDLRenderer::handleKeys(std::array<bool, 16> &pressedKeys,
 		if (e.type == SDL_EVENT_KEY_UP && e.key.key == SDLK_ESCAPE) {
 			shouldQuit = true;
 			return;
+		}
+
+		if(e.type == SDL_EVENT_KEY_UP && e.key.scancode == SDL_SCANCODE_GRAVE){
+			config->settingsShown = !config->settingsShown;
 		}
 
 		for (int i = 0; i < 16; i++) {

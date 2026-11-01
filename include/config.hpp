@@ -28,4 +28,6 @@ class Config{
 		bool logging;
 
 		int restart = false;
+
+		int settingsShown = true;
 };

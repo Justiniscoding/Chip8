@@ -1,7 +1,7 @@
 #include <cstring>
+#include <filesystem>
 #include <iostream>
 #include <string>
-#include <filesystem>
 
 #include "chip8.hpp"
 #include "config.hpp"
@@ -14,7 +14,7 @@ int main() {
 
 	std::cin >> romPath;
 
-	while(!std::filesystem::is_regular_file(romPath)){
+	while (!std::filesystem::is_regular_file(romPath)) {
 		std::cout << "No such file found, please try again: ";
 
 		std::cin >> romPath;
@@ -24,8 +24,6 @@ int main() {
 
 	Chip8Emulator ch8(romPath, &config);
 	SDLRenderer renderer(&config);
-
-	std::filesystem::exists("check");
 
 	std::array<bool, 16> pressedKeys;
 
@@ -52,13 +50,13 @@ int main() {
 		}
 
 		for (int _ = 0; _ < config.iterationsPerFrame; _++) {
-			if(config.restart){
+			if (config.restart) {
 				config.restart = false;
 
 				ch8.restart(romPath);
 			}
 
-			if(ch8.executeNextInstruction(renderer.frameBuffer, pressedKeys)){
+			if (ch8.executeNextInstruction(renderer.frameBuffer, pressedKeys)) {
 				break;
 			}
 		}

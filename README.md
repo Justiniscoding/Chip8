@@ -21,23 +21,24 @@ Screenshots from running test ROMs that prove this emulator is working!
 
 ## Installation
 
-This project uses C++ with SDL3 and Dear ImGui and has a pre-built binary for MacOS. It can be found in the releases page [here](https://github.com/Justiniscoding/Chip8/releases/tag/v1.0.0).
+This project uses C++ with SDL3 and Dear ImGui and has a pre-built binary for MacOS on Apple Silicon. It can be found in the releases page [here](https://github.com/Justiniscoding/Chip8/releases/tag/v1.0.0). Make sure you download the .dylib as well for SDL3 to work, and the roms.zip file so that you have programs to run in the emulator.
 
 To run the binary:
 ```sh
-cd Downloads
-chmod +x Chip8MacOS
-xattr -d com.apple.quarantine Chip8MacOS # Disables the MacOS security check (Apple just wants me to pay $99/year for a dev license)
-./Chip8MacOS
+cd ~/Downloads
+unzip roms.zip
+chmod +x Chip8Arm
+xattr -d com.apple.quarantine Chip8Arm libSDL3.0.dylib # Disables the MacOS security check (Apple just wants me to pay $99/year for a dev license)
+./Chip8Arm
 ```
 
-For **other platforms**, you will have to compile the source yourself. If you have `clang++`, `SDL3`, and `pkg-config` in your PATH, it should be as simple as:
+For **other platforms** (including MacOS on Intel), you will have to compile the source yourself. If you have `clang++`, `SDL3`, and `pkg-config` in your PATH, it is as simple as:
 ```sh
 git clone https://github.com/Justiniscoding/Chip8
 cd Chip8
 make
 ```
-__Note that operating systems other than MacOS are untested and may not work.__
+The above was tested on an Ubuntu virtual machine as well as MacOS on Intel
 
 
 Upon running this program, you will be prompted to enter the path to a Chip8 ROM/file, and it will then open a window of the emulator running that page. By default, the background colour is black, and the foreground colour is dodgerblue (#1e90ff). Both of these can be customized in the settings menu, which is open upon first launch and can be toggled by pressing backtick (\`).
